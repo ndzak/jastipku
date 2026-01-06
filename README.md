@@ -1,6 +1,10 @@
 # Project Flask - JastipKu
 
-Deskripsi singkat project lo, misal: Aplikasi web untuk manajemen data produk dengan Flask dan MySQL.
+Jastip Ku,Tugas Besar Pemrograman Berorientasi Objek
+Anggota Kelompok :
+- Noufal Dzaky (411232068)
+- Setio Permadi (411232072)
+- Dendi Cahya Lukito (411232067)
 
 ## 🚀 Features
 
@@ -47,10 +51,10 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 ### 4. Setup Database
-CREATE DATABASE nama_database;
+CREATE DATABASE jastip_app;
 
 ### 5. Konfigurasi Environment
-DATABASE_URI=mysql+pymysql://root:password@localhost/nama_database
+DATABASE_URI=mysql+pymysql://root:password@localhost/jastip_app
 SECRET_KEY=your-secret-key-here
 DEBUG=True
 
