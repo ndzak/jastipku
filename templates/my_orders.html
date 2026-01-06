@@ -1,0 +1,381 @@
+<!-- templates/my_orders.html -->
+{% extends "base.html" %}
+
+{% block title %}Pesanan Saya{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* KILL ALL HOVER & ANIMATIONS */
+    *, *::before, *::after {
+        transition: none !important;
+        transform: none !important;
+        animation: none !important;
+        will-change: auto !important;
+    }
+    
+    /* Disable card hover from base.html */
+    .card, .card:hover, .card:active {
+        transform: none !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    }
+    
+    /* Disable button hover effects */
+    .btn, .btn:hover, .btn:active, .btn:focus {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* Static layout */
+    .order-card {
+        margin-bottom: 1rem;
+        border-radius: 8px;
+    }
+    /* Star Rating Shopee Style */
+    .star-rating-container {
+        background: linear-gradient(135deg, #fff5e6 0%, #ffe6e6 100%);
+        border-radius: 12px;
+        border: 2px dashed #ffd700;
+    }
+
+    .star-rating {
+        display: inline-flex;
+        flex-direction: row-reverse;
+        gap: 8px;
+    }
+
+    .star-rating .star {
+        cursor: pointer;
+        font-size: 3rem;
+        color: #ddd;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .star-rating .star:hover,
+    .star-rating .star:hover ~ .star,
+    .star-rating input:checked ~ .star {
+        color: #ffd700;
+        transform: scale(1.1);
+    }
+
+    .star-rating .star:hover {
+        animation: pulse 0.3s ease;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1.1); }
+        50% { transform: scale(1.2); }
+    }
+
+    /* Active state dengan gradient */
+    .star-rating input:checked ~ .star i {
+        background: linear-gradient(45deg, #ffd700, #ffed4e);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.5));
+    }
+
+    /* Rating text yang berubah */
+    .rating-text {
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .rating-text.active {
+        color: #ffd700 !important;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4"><i class="bi bi-bag-check"></i> Pesanan Saya</h2>
+    
+    <!-- BARU: Filter Status -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('main.my_orders', status='all') }}" 
+                   class="btn btn-sm {{ 'btn-primary' if current_filter == 'all' else 'btn-outline-primary' }}">
+                    Semua
+                </a>
+                <a href="{{ url_for('main.my_orders', status='Pending') }}" 
+                   class="btn btn-sm {{ 'btn-warning' if current_filter == 'Pending' else 'btn-outline-warning' }}">
+                    Pending
+                </a>
+                <a href="{{ url_for('main.my_orders', status='Paid') }}" 
+                   class="btn btn-sm {{ 'btn-info' if current_filter == 'Paid' else 'btn-outline-info' }}">
+                    Paid
+                </a>
+                <a href="{{ url_for('main.my_orders', status='Shipped') }}" 
+                   class="btn btn-sm {{ 'btn-primary' if current_filter == 'Shipped' else 'btn-outline-primary' }}">
+                    Shipped
+                </a>
+                <a href="{{ url_for('main.my_orders', status='Completed') }}" 
+                   class="btn btn-sm {{ 'btn-success' if current_filter == 'Completed' else 'btn-outline-success' }}">
+                    Completed
+                </a>
+                <a href="{{ url_for('main.my_orders', status='Cancelled') }}" 
+                   class="btn btn-sm {{ 'btn-danger' if current_filter == 'Cancelled' else 'btn-outline-danger' }}">
+                    Cancelled
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    {% if orders %}
+        {% for order in orders %}
+        <div class="card shadow-sm mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><strong>Order #{{ order.id }}</strong></span>
+                <span class="badge 
+                    {% if order.status == 'Pending' %}bg-warning text-dark
+                    {% elif order.status == 'Paid' %}bg-info
+                    {% elif order.status == 'Shipped' %}bg-primary
+                    {% elif order.status == 'Completed' %}bg-success
+                    {% elif order.status == 'Cancelled' %}bg-danger
+                    {% endif %}">
+                    {{ order.status }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-2">
+                        {% if order.product_request.image_url %}
+                        <img src="{{ order.product_request.image_url }}" class="img-fluid rounded" alt="{{ order.product_request.item_name }}">
+                        {% else %}
+                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" style="height: 100px;">
+                            <span>No Image</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <h5>{{ order.product_request.item_name }}</h5>
+                        <p class="text-muted mb-1">Quantity: {{ order.quantity }}</p>
+                        <p class="mb-1"><strong>Total: Rp {{ "{:,.0f}".format(order.total) }}</strong></p>
+                        <p class="text-muted small mb-0">
+                            <i class="bi bi-calendar"></i> {{ order.created_at.strftime('%d %b %Y, %H:%M') }} WIB
+                        </p>
+
+                        <!-- BARU: Shipping Info -->
+                        {% if order.status == 'Paid' %}
+                        <div class="alert alert-info mt-2 mb-0 py-2">
+                            <small>
+                                Jastipper sudah menerima pembayaran anda <br> Pesanan akan diproses pengiriman 1-3 x 24 Jam
+                            </small>
+                        </div>
+                        {% endif %}
+
+                        <!-- BARU: Chat Button -->
+                        {% set wa_message = "Mau tanya orderanku dong min ini nomor ordernya : (#" ~ order.id ~ ") dong min" %}
+                        <a href="https://wa.me/6281293145062?text={{ wa_message|urlencode }}" 
+                        target="_blank" 
+                        class="btn btn-outline-success">
+                            <i class="bi bi-whatsapp"></i> 
+                            Tanya via WhatsApp
+                        </a>
+                        
+                        <!-- BARU: Shipping Info -->
+                        {% if order.status == 'Shipped' or order.status == 'Completed' %}
+                        <div class="alert alert-info mt-2 mb-0 py-2">
+                            <small>
+                                <i class="bi bi-truck"></i> <strong>{{ order.shipping_courier }}</strong><br>
+                                No. Resi: <strong>{{ order.tracking_number }}</strong>
+                            </small>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- BARU: Cancel Reason -->
+                        {% if order.status == 'Cancelled' and order.cancel_reason %}
+                        <div class="alert alert-danger mt-2 mb-0 py-2">
+                            <small><i class="bi bi-x-circle"></i> <strong>Alasan:</strong> {{ order.cancel_reason }}</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <!-- BARU: Upload Bukti Bayar -->
+                        {% if order.status == 'Pending' %}
+                            {% if not order.payment_proof_url %}
+                            <div class="alert alert-warning mb-2">
+                                <small><i class="bi bi-exclamation-triangle"></i> Menunggu bukti pembayaran <br> <br> BCA (411231 an JastipKu) <br> Mandiri (112322 an JastipKu)</small>
+                            </div>
+                            <form method="POST" action="{{ url_for('main.upload_payment', order_id=order.id) }}" enctype="multipart/form-data">
+                                <div class="mb-2">
+                                    <input type="file" class="form-control form-control-sm" name="payment_proof" accept="image/*" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm w-100">
+                                    <i class="bi bi-upload"></i> Upload Bukti Bayar
+                                </button>
+                            </form>
+                            {% else %}
+                            <div class="alert alert-info mb-2">
+                                <small><i class="bi bi-clock-history"></i> Menunggu verifikasi jastipper</small>
+                            </div>
+                            <a href="{{ order.payment_proof_url }}" target="_blank" class="btn btn-sm btn-outline-secondary w-100 mb-2">
+                                <i class="bi bi-eye"></i> Lihat Bukti Bayar
+                            </a>
+                            {% endif %}
+                        {% endif %}
+                        
+                        <!-- BARU: Review Form -->
+                        {% if order.status == 'Completed' and not order.reviewed %}
+                        <button class="btn btn-success btn-sm w-100" data-bs-toggle="modal" data-bs-target="#reviewModal{{ order.id }}">
+                            <i class="bi bi-star"></i> Berikan Review
+                        </button>
+                        
+                        <!-- Review Modal -->
+                        <div class="modal fade" id="reviewModal{{ order.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Review Order #{{ order.id }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('main.submit_review', order_id=order.id) }}">
+                                        <div class="modal-body">
+                                            <div class="mb-4">
+                                                <label class="form-label fw-bold">Berikan Rating</label>
+                                                <div class="star-rating-container text-center py-3">
+                                                    <div class="star-rating" data-order-id="{{ order.id }}">
+                                                        <input type="radio" name="rating" value="5" id="star5_{{ order.id }}" hidden>
+                                                        <label for="star5_{{ order.id }}" class="star" data-value="5">
+                                                            <i class="bi bi-star-fill"></i>
+                                                        </label>
+                                                        
+                                                        <input type="radio" name="rating" value="4" id="star4_{{ order.id }}" hidden>
+                                                        <label for="star4_{{ order.id }}" class="star" data-value="4">
+                                                            <i class="bi bi-star-fill"></i>
+                                                        </label>
+                                                        
+                                                        <input type="radio" name="rating" value="3" id="star3_{{ order.id }}" hidden>
+                                                        <label for="star3_{{ order.id }}" class="star" data-value="3">
+                                                            <i class="bi bi-star-fill"></i>
+                                                        </label>
+                                                        
+                                                        <input type="radio" name="rating" value="2" id="star2_{{ order.id }}" hidden>
+                                                        <label for="star2_{{ order.id }}" class="star" data-value="2">
+                                                            <i class="bi bi-star-fill"></i>
+                                                        </label>
+                                                        
+                                                        <input type="radio" name="rating" value="1" id="star1_{{ order.id }}" hidden>
+                                                        <label for="star1_{{ order.id }}" class="star" data-value="1">
+                                                            <i class="bi bi-star-fill"></i>
+                                                        </label>
+                                                    </div>
+                                                    <p class="rating-text mt-2 mb-0 text-muted">Pilih rating Anda</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Komentar (Opsional)</label>
+                                                <textarea name="comment" class="form-control" rows="4" placeholder="Bagikan pengalaman Anda dengan produk ini..."></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-send"></i> Kirim Review
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% elif order.reviewed %}
+                        <div class="alert alert-success mb-0">
+                            <small><i class="bi bi-check-circle"></i> Sudah direview</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Belum ada pesanan.
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: center;
+}
+.rating input {
+    display: none;
+}
+.rating label {
+    cursor: pointer;
+    padding: 5px;
+}
+.rating input:checked ~ label {
+    color: gold;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Rating texts
+    const ratingTexts = {
+        1: 'Sangat Buruk 😞',
+        2: 'Kurang Memuaskan 😕',
+        3: 'Cukup Baik 😐',
+        4: 'Memuaskan 😊',
+        5: 'Sangat Memuaskan! 🤩'
+    };
+    
+    // Get all star ratings
+    const starRatings = document.querySelectorAll('.star-rating');
+    
+    starRatings.forEach(ratingContainer => {
+        const stars = ratingContainer.querySelectorAll('.star');
+        const ratingText = ratingContainer.parentElement.querySelector('.rating-text');
+        
+        stars.forEach(star => {
+            // Click event
+            star.addEventListener('click', function() {
+                const value = this.getAttribute('data-value');
+                ratingText.textContent = ratingTexts[value];
+                ratingText.classList.add('active');
+                
+                // Visual feedback
+                this.style.animation = 'pulse 0.3s ease';
+                setTimeout(() => {
+                    this.style.animation = '';
+                }, 300);
+            });
+            
+            // Hover event
+            star.addEventListener('mouseenter', function() {
+                const value = this.getAttribute('data-value');
+                ratingText.textContent = ratingTexts[value];
+                ratingText.style.color = '#ffd700';
+            });
+        });
+        
+        // Reset on mouse leave
+        ratingContainer.addEventListener('mouseleave', function() {
+            const checkedInput = this.querySelector('input:checked');
+            if (checkedInput) {
+                const checkedValue = checkedInput.value;
+                ratingText.textContent = ratingTexts[checkedValue];
+                ratingText.classList.add('active');
+            } else {
+                ratingText.textContent = 'Pilih rating Anda';
+                ratingText.classList.remove('active');
+                ratingText.style.color = '';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

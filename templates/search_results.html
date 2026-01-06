@@ -1,0 +1,86 @@
+<!-- templates/search_results.html -->
+{% extends "base.html" %}
+
+{% block title %}Hasil Pencarian - JastipKu{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">
+        <i class="bi bi-search"></i> Hasil Pencarian
+        {% if q %}"{{ q }}"{% endif %}
+        {% if cat %}Kategori: {{ cat }}{% endif %}
+    </h2>
+    
+    <!-- Search Form -->
+    <form method="GET" action="{{ url_for('main.search') }}" class="mb-4">
+        <div class="row">
+            <div class="col-md-8">
+                <input type="text" name="q" class="form-control" placeholder="Cari produk..." value="{{ q or '' }}">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Cari
+                </button>
+            </div>
+        </div>
+    </form>
+    
+    {% if results %}
+    <p class="text-muted">Ditemukan {{ results|length }} produk</p>
+    
+    <div class="row">
+        {% for product in results %}
+        <div class="col-md-4 mb-4">
+            <a href="{{ url_for('main.product_detail', product_id=product.id) }}" class="text-decoration-none">
+                <div class="card h-100">
+                    {% if product.image_url %}
+                    <img src="{{ product.image_url }}" class="card-img-top product-img" alt="{{ product.item_name }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <span>No Image</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card-body">
+                        <h5 class="card-title">{{ product.item_name }}</h5>
+                        <p class="text-muted small">{{ product.description[:80] }}...</p>
+                        <p class="mb-1">
+                            <span class="badge bg-secondary">{{ product.category or 'Uncategorized' }}</span>
+                        </p>
+                        <h4 class="text-primary">Rp {{ "{:,.0f}".format(product.total_price) }}</h4>
+                        <p class="text-muted small">
+                            <i class="bi bi-person"></i> {{ product.jastipper.name }}
+                        </p>
+                    </div>
+                    
+                    <div class="card-footer bg-white border-top-0">
+                        <div class="d-grid gap-2">
+                            <!-- TOMBOL LIHAT DETAIL (BARU!) -->
+                            <a href="{{ url_for('main.product_detail', product_id=product.id) }}" class="btn btn-outline-primary">
+                                <i class="bi bi-eye"></i> Lihat Detail
+                            </a>
+                            
+                            {% if current_user.is_authenticated and not current_user.product_requests %}
+                            <a href="{{ url_for('main.order', request_id=product.id) }}" class="btn btn-primary">
+                                <i class="bi bi-cart-plus"></i> Pesan
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-warning text-center py-5">
+        <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+        <h4 class="mt-3">Produk tidak ditemukan</h4>
+        <p>Coba kata kunci lain atau lihat semua produk</p>
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary mt-2">
+            <i class="bi bi-house"></i> Kembali ke Beranda
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

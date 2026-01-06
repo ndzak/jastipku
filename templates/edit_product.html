@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Produk - JastipKu{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <h2 class="mb-4">
+                    <i class="bi bi-pencil-square"></i> Edit Produk
+                </h2>
+                
+                <form method="POST" action="{{ url_for('main.edit_product', product_id=product.id) }}" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="item_name" class="form-label">Nama Produk *</label>
+                            <input type="text" class="form-control" id="item_name" name="item_name" value="{{ product.item_name }}" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="category" class="form-label">Kategori</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="">Pilih Kategori</option>
+                                <option value="Fashion" {% if product.category == 'Fashion' %}selected{% endif %}>Fashion</option>
+                                <option value="Elektronik" {% if product.category == 'Elektronik' %}selected{% endif %}>Elektronik</option>
+                                <option value="Makanan" {% if product.category == 'Makanan' %}selected{% endif %}>Makanan</option>
+                                <option value="Kosmetik" {% if product.category == 'Kosmetik' %}selected{% endif %}>Kosmetik</option>
+                                <option value="Lainnya" {% if product.category == 'Lainnya' %}selected{% endif %}>Lainnya</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Deskripsi Produk</label>
+                        <textarea class="form-control" id="description" name="description" rows="4">{{ product.description }}</textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="base_price" class="form-label">Harga Dasar (Rp) *</label>
+                            <input type="number" class="form-control" id="base_price" name="base_price" value="{{ product.base_price }}" step="0.01" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="fee_percent" class="form-label">Fee Jastip (%)</label>
+                            <input type="number" class="form-control" id="fee_percent" name="fee_percent" value="{{ product.fee_percent }}" min="0" max="100">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        {% if product.image_url %}
+                        <div class="mb-2">
+                            <label class="form-label">Foto Saat Ini:</label><br>
+                            <img src="{{ product.image_url }}" alt="{{ product.item_name }}" style="max-width: 200px; max-height: 200px;" class="rounded">
+                        </div>
+                        {% endif %}
+                        <label for="image" class="form-label">Ganti Foto Produk (Optional)</label>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        <small class="text-muted">Format: JPG, PNG, GIF (Max 5MB)</small>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('main.jastipper_products') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Batal
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Update Produk
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

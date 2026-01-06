@@ -1,0 +1,72 @@
+<!-- templates/index.html -->
+{% extends "base.html" %}
+
+{% block title %}Beranda - JastipKu{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="bg-gradient text-white py-5" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+    <div class="container text-center" style="color:#8b5cf6;">
+        <h1 class="display-4 fw-bold">Selamat Datang di JastipKu</h1>
+        <p class="lead">Platform Jasa Titip Terpercaya & Aman</p>
+        <a href="{{ url_for('main.search') }}" class="btn btn-light btn-lg mt-3">
+            <i class="bi bi-search"></i> Cari Produk
+        </a>
+    </div>
+</div>
+
+<!-- Popular Products -->
+<div class="container my-5">
+    <h2 class="text-center mb-4">Produk Populer</h2>
+    
+    {% if popular %}
+    <div class="row">
+        {% for product in popular %}
+        <div class="col-md-4 mb-4">
+            <a href="{{ url_for('main.product_detail', product_id=product.id) }}" class="text-decoration-none">
+                <div class="card h-100 product-card">
+                    {% if product.image_url %}
+                    <img src="{{ product.image_url }}" class="card-img-top product-img" alt="{{ product.item_name }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <span>No Image</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card-body">
+                        <h5 class="card-title text-dark">{{ product.item_name }}</h5>
+                        <p class="text-muted small">{{ product.description[:80] }}...</p>
+                        <h4 class="text-primary">Rp {{ "{:,.0f}".format(product.total_price) }}</h4>
+                        <p class="text-muted small">
+                            <i class="bi bi-person"></i> {{ product.jastipper.name }}
+                        </p>
+                    </div>
+                    
+                    <div class="card-footer bg-white border-top-0">
+                        <div class="d-grid gap-2">
+                            <!-- Button tetap ada untuk visual, tapi card udah clickable -->
+                            <span class="btn btn-outline-primary">
+                                <i class="bi bi-eye"></i> Lihat Detail
+                            </span>
+                            
+                            {% if current_user.is_authenticated and not current_user.product_requests %}
+                            <a href="{{ url_for('main.order', request_id=product.id) }}" 
+                            class="btn btn-primary"
+                            onclick="event.stopPropagation();">
+                                <i class="bi bi-cart-plus"></i> Pesan
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <i class="bi bi-info-circle"></i> Belum ada produk tersedia
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

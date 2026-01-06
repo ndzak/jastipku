@@ -1,0 +1,105 @@
+<!-- templates/order_form.html -->
+{% extends "base.html" %}
+
+{% block title %}Order - {{ product.item_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-cart-check"></i> Konfirmasi Pesanan</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Product Info -->
+                    <h5 class="mb-3">Detail Produk</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            {% if product.image_url %}
+                            <img src="{{ product.image_url }}" class="img-fluid rounded" alt="{{ product.item_name }}">
+                            {% else %}
+                            <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <span>No Image</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <h5>{{ product.item_name }}</h5>
+                            <p class="text-muted">{{ product.description }}</p>
+                            <p><strong>Harga Dasar:</strong> Rp {{ "{:,.0f}".format(product.base_price) }}</p>
+                            <p><strong>Fee Jastipper ({{ product.fee_percent }}%):</strong> Rp {{ "{:,.0f}".format(product.fee_amount) }}</p>
+                            <h5 class="text-primary"><strong>Total:</strong> Rp {{ "{:,.0f}".format(product.total_price) }}</h5>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- BARU: Address Confirmation -->
+                    <h5 class="mb-3">Alamat Pengiriman</h5>
+                    <div class="alert alert-info">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="mb-1"><strong><i class="bi bi-person"></i> {{ user.username }}</strong></p>
+                                <p class="mb-1"><i class="bi bi-telephone"></i> {{ user.phone or 'Tidak ada no. telepon' }}</p>
+                                <p class="mb-0"><i class="bi bi-geo-alt"></i> {{ user.address }}</p>
+                            </div>
+                            <a href="{{ url_for('main.profile') }}" class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil"></i> Ubah
+                            </a>
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i> Pastikan alamat sudah benar. 
+                        Klik "Ubah" untuk mengedit alamat Anda.
+                    </small>
+                    
+                    <hr class="my-4">
+                    
+                    <!-- Order Form -->
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="quantity" class="form-label">Jumlah</label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1" required>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> 
+                            Setelah memesan, Anda akan diarahkan untuk upload bukti pembayaran.
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle"></i> Konfirmasi Pesanan
+                            </button>
+                            <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Batal
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Info Pembayaran</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Metode Pembayaran:</strong></p>
+                    <p class="text-muted">Transfer Bank <br> BCA (411231 an JastipKu) <br> Mandiri (112322 an JastipKu)</p>
+                    <hr>
+                    <p><strong>Langkah Selanjutnya:</strong></p>
+                    <ol class="small">
+                        <li>Klik "Konfirmasi Pesanan"</li>
+                        <li>Transfer ke rekening jastipper</li>
+                        <li>Upload bukti pembayaran di "Pesanan Saya"</li>
+                        <li>Tunggu verifikasi dari jastipper</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

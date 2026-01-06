@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Kelola Pesanan{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* KILL ALL HOVER & ANIMATIONS */
+    *, *::before, *::after {
+        transition: none !important;
+        transform: none !important;
+        animation: none !important;
+        will-change: auto !important;
+    }
+    
+    /* Disable card hover from base.html */
+    .card, .card:hover, .card:active {
+        transform: none !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    }
+    
+    /* Disable button hover effects */
+    .btn, .btn:hover, .btn:active, .btn:focus {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* Static layout */
+    .order-card {
+        margin-bottom: 1rem;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4"><i class="bi bi-list-check"></i> Kelola Pesanan</h2>
+    
+    <!-- Filters -->
+    <div class="card order-card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <label class="form-label fw-bold">Filter Status:</label>
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('main.jastipper_orders', status='all') }}" 
+                           class="btn btn-sm {{ 'btn-primary' if status_filter == 'all' else 'btn-outline-primary' }}">
+                            Semua
+                        </a>
+                        <a href="{{ url_for('main.jastipper_orders', status='Pending') }}" 
+                           class="btn btn-sm {{ 'btn-warning' if status_filter == 'Pending' else 'btn-outline-warning' }}">
+                            Pending
+                        </a>
+                        <a href="{{ url_for('main.jastipper_orders', status='Paid') }}" 
+                           class="btn btn-sm {{ 'btn-info' if status_filter == 'Paid' else 'btn-outline-info' }}">
+                            Paid
+                        </a>
+                        <a href="{{ url_for('main.jastipper_orders', status='Shipped') }}" 
+                           class="btn btn-sm {{ 'btn-primary' if status_filter == 'Shipped' else 'btn-outline-primary' }}">
+                            Shipped
+                        </a>
+                        <a href="{{ url_for('main.jastipper_orders', status='Completed') }}" 
+                           class="btn btn-sm {{ 'btn-success' if status_filter == 'Completed' else 'btn-outline-success' }}">
+                            Completed
+                        </a>
+                        <a href="{{ url_for('main.jastipper_orders', status='Cancelled') }}" 
+                           class="btn btn-sm {{ 'btn-danger' if status_filter == 'Cancelled' else 'btn-outline-danger' }}">
+                            Cancelled
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Filter Payment:</label>
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('main.jastipper_orders', payment='all') }}" 
+                           class="btn btn-sm {{ 'btn-secondary' if payment_filter == 'all' else 'btn-outline-secondary' }}">
+                            Semua
+                        </a>
+                        <a href="{{ url_for('main.jastipper_orders', payment='unverified') }}" 
+                           class="btn btn-sm {{ 'btn-warning' if payment_filter == 'unverified' else 'btn-outline-warning' }}">
+                            Perlu Verifikasi
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if orders %}
+        {% for order in orders %}
+        <div class="card order-card">
+            <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #f8f9fa;">
+                <span><strong>Order #{{ order.id }}</strong> - {{ order.buyer.username }}</span>
+                <span class="badge 
+                    {% if order.status == 'Pending' %}bg-warning text-dark
+                    {% elif order.status == 'Paid' %}bg-info
+                    {% elif order.status == 'Shipped' %}bg-primary
+                    {% elif order.status == 'Completed' %}bg-success
+                    {% elif order.status == 'Cancelled' %}bg-danger
+                    {% endif %}">
+                    {{ order.status }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5>{{ order.product_request.item_name }}</h5>
+                        <p class="mb-1"><strong>Quantity:</strong> {{ order.quantity }}</p>
+                        <p class="mb-1"><strong>Total:</strong> Rp {{ "{:,.0f}".format(order.total) }}</p>
+                        <p class="mb-1"><strong>Tanggal:</strong> {{ order.created_at.strftime('%d %b %Y, %H:%M') }} WIB</p>
+                        
+                        <!-- Buyer Address -->
+                        <div class="alert alert-light mt-2 mb-2">
+                            <strong><i class="bi bi-geo-alt"></i> Alamat Pengiriman:</strong><br>
+                            <small>{{ order.buyer.address }}</small><br>
+                            <small><i class="bi bi-telephone"></i> {{ order.buyer.phone or 'Tidak ada nomor' }}</small>
+                        </div>
+                        
+                        <!-- Payment Proof -->
+                        {% if order.payment_proof_url %}
+                        <div class="alert {{ 'alert-warning' if not order.payment_verified else 'alert-success' }} mb-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-receipt"></i>
+                                    {% if order.payment_verified %}
+                                    <strong>Pembayaran Terverifikasi</strong>
+                                    {% else %}
+                                    <strong>Menunggu Verifikasi Pembayaran</strong>
+                                    {% endif %}
+                                    <br>
+                                    <small>Upload: {{ order.payment_uploaded_at.strftime('%d %b %Y, %H:%M') }} WIB</small>
+                                </div>
+                                <a href="{{ order.payment_proof_url }}" target="_blank" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-eye"></i> Lihat Bukti
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Cancel Reason -->
+                        {% if order.cancel_reason %}
+                        <div class="alert alert-danger mb-2">
+                            <strong><i class="bi bi-x-circle"></i> Alasan Dibatalkan:</strong><br>
+                            {{ order.cancel_reason }}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Shipping Info -->
+                        {% if order.shipping_courier %}
+                        <div class="alert alert-info mb-2">
+                            <strong><i class="bi bi-truck"></i> Info Pengiriman:</strong><br>
+                            Kurir: <strong>{{ order.shipping_courier }}</strong><br>
+                            No. Resi: <strong>{{ order.tracking_number }}</strong>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <!-- Payment Verification Actions -->
+                        {% if order.payment_proof_url and not order.payment_verified and order.status == 'Pending' %}
+                        <form method="POST" action="{{ url_for('main.verify_payment', order_id=order.id) }}" class="mb-2">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-check-circle"></i> Verifikasi Pembayaran
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('main.reject_payment', order_id=order.id) }}" class="mb-3">
+                            <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Tolak bukti pembayaran ini?')">
+                                <i class="bi bi-x-circle"></i> Tolak Pembayaran
+                            </button>
+                        </form>
+                        <hr>
+                        {% endif %}
+                        
+                        <!-- Update Status Button -->
+                        {% if order.status not in ['Completed', 'Cancelled'] and order.payment_verified %}
+                        <button class="btn btn-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#updateModal{{ order.id }}">
+                            <i class="bi bi-pencil"></i> Update Status
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Update Modal (OUTSIDE CARD!) -->
+        {% if order.status not in ['Completed', 'Cancelled'] %}
+        <div class="modal" id="updateModal{{ order.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Update Status Order #{{ order.id }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="POST" action="{{ url_for('main.update_order_status', order_id=order.id) }}">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Status Baru</label>
+                                <select name="status" class="form-select" id="statusSelect{{ order.id }}" required onchange="toggleFields{{ order.id }}(this.value)">
+                                    <option value="Pending" {{ 'selected' if order.status == 'Pending' else '' }}>Pending</option>
+                                    <option value="Paid" {{ 'selected' if order.status == 'Paid' else '' }}>Paid</option>
+                                    <option value="Shipped">Shipped</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Cancel Reason -->
+                            <div class="mb-3" id="cancelFields{{ order.id }}" style="display:none;">
+                                <label class="form-label">Alasan Pembatalan <span class="text-danger">*</span></label>
+                                <textarea name="cancel_reason" class="form-control" rows="3"></textarea>
+                            </div>
+                            
+                            <!-- Shipping Fields -->
+                            <div id="shippingFields{{ order.id }}" style="display:none;">
+                                <div class="mb-3">
+                                    <label class="form-label">Nama Kurir <span class="text-danger">*</span></label>
+                                    <input type="text" name="courier" class="form-control" placeholder="JNE / Sicepat / J&T">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Nomor Resi <span class="text-danger">*</span></label>
+                                    <input type="text" name="tracking_number" class="form-control" placeholder="JP1234567890">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary">Update Status</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Belum ada pesanan dengan filter ini.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+{% for order in orders %}
+function toggleFields{{ order.id }}(status) {
+    const cancelFields = document.getElementById('cancelFields{{ order.id }}');
+    const shippingFields = document.getElementById('shippingFields{{ order.id }}');
+    
+    if (cancelFields) cancelFields.style.display = status === 'Cancelled' ? 'block' : 'none';
+    if (shippingFields) shippingFields.style.display = status === 'Shipped' ? 'block' : 'none';
+}
+{% endfor %}
+</script>
+{% endblock %}

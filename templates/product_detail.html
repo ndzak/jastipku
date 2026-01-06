@@ -1,0 +1,128 @@
+<!-- templates/product_detail.html -->
+{% extends "base.html" %}
+
+{% block title %}{{ product.item_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <!-- Product Image & Info -->
+        <div class="col-md-6">
+            {% if product.image_url %}
+            <img src="{{ product.image_url }}" class="img-fluid rounded shadow" alt="{{ product.item_name }}">
+            {% else %}
+            <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded shadow" style="height: 400px;">
+                <span class="display-4">No Image</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="col-md-6">
+            <h2>{{ product.item_name }}</h2>
+            
+            <!-- Rating -->
+            <div class="mb-3">
+                {{ product.average_rating }}
+                {% if product.average_rating > 0 %}
+                <span class="text-warning">
+                    {% for i in range(5) %}
+                        {% if i < product.average_rating|round %}
+                        ⭐
+                        {% else %}
+                        ☆
+                        {% endif %}
+                    {% endfor %}
+                </span>
+                <span class="text-muted">({{ "%.1f"|format(product.average_rating) }}) - {{ product.review_count }} review</span>
+                {% else %}
+                <span class="text-muted">Belum ada review</span>
+                {% endif %}
+            </div>
+            
+            <p class="text-muted">{{ product.description or 'Tidak ada deskripsi' }}</p>
+            
+            <div class="card bg-light mb-3">
+                <div class="card-body">
+                    <p class="mb-1"><strong>Kategori:</strong> {{ product.category or 'Tidak ada kategori' }}</p>
+                    <p class="mb-1"><strong>Harga Dasar:</strong> <span class="text-success">Rp {{ "{:,.0f}".format(product.base_price) }}</span></p>
+                    <p class="mb-1"><strong>Fee Jastipper ({{ product.fee_percent }}%):</strong> Rp {{ "{:,.0f}".format(product.fee_amount) }}</p>
+                    <hr>
+                    <h4 class="text-primary mb-0"><strong>Total Harga:</strong> Rp {{ "{:,.0f}".format(product.total_price) }}</h4>
+                </div>
+            </div>
+            
+            <p class="text-muted small">
+                <i class="bi bi-person-circle"></i> Dijual oleh: <strong>{{ product.jastipper.name }}</strong>
+            </p>
+            
+            <!-- Action Buttons -->
+            {% if current_user.is_authenticated and not current_user.product_requests %}
+            <div class="d-grid gap-2">
+                <a href="{{ url_for('main.order', request_id=product.id) }}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-cart-plus"></i> Pesan Sekarang
+                </a>
+                
+                <!-- BARU: Chat Button -->
+                {% set wa_message = "Mau tanya produk " + product.item_name + " dong min" %}
+                <a href="https://wa.me/6281293145062?text={{ wa_message|urlencode }}" 
+                target="_blank" 
+                class="btn btn-outline-success">
+                    <i class="bi bi-whatsapp"></i> 
+                    Tanya via WhatsApp
+                </a>
+            </div>
+            {% elif current_user.is_authenticated %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Jastipper tidak dapat memesan produk.
+            </div>
+            {% else %}
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i> <a href="{{ url_for('main.login') }}">Login</a> untuk memesan produk ini.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <hr class="my-5">
+    
+    <!-- BARU: Reviews Section -->
+    <div class="row">
+        <div class="col-12">
+            <h3 class="mb-4"><i class="bi bi-star-fill text-warning"></i> Review & Rating</h3>
+            
+            {% if reviews %}
+                {% for review in reviews %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="card-title mb-1">{{ review.user.username }}</h5>
+                                <div class="text-warning mb-2">
+                                    {% for i in range(5) %}
+                                        {% if i < review.rating %}
+                                        ⭐
+                                        {% else %}
+                                        ☆
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <small class="text-muted">{{ review.created_at.strftime('%d %b %Y') }}</small>
+                        </div>
+                        {% if review.comment %}
+                        <p class="card-text">{{ review.comment }}</p>
+                        {% else %}
+                        <p class="card-text text-muted fst-italic">Tidak ada komentar</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Belum ada review untuk produk ini.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

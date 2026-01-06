@@ -1,0 +1,102 @@
+<!-- templates/register.html -->
+{% extends "base.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h3 class="card-title text-center mb-4">Registrasi Akun</h3>
+                    <form method="POST">
+                        <!-- Role Selection -->
+                        <div class="mb-3 d-none">
+                            <label class="form-label">Daftar Sebagai:</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="role" id="buyer" value="buyer" checked onchange="toggleFields()">
+                                <label class="form-check-label" for="buyer">
+                                    Buyer (Pembeli)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="role" id="jastipper" value="jastipper" onchange="toggleFields()">
+                                <label class="form-check-label" for="jastipper">
+                                    Jastipper (Penjual)
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Buyer Fields -->
+                        <div id="buyerFields">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" name="username" placeholder="username123">
+                            </div>
+                            
+                            <!-- BARU: Address -->
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Alamat Lengkap <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="address" name="address" rows="3" placeholder="Jl. Contoh No. 123, RT/RW, Kelurahan, Kecamatan, Kota, Provinsi, Kode Pos" required></textarea>
+                                <small class="text-muted">Alamat ini akan digunakan untuk pengiriman pesanan</small>
+                            </div>
+                            
+                            <!-- BARU: Phone -->
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">No. Telepon</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" placeholder="08123456789">
+                            </div>
+                        </div>
+
+                        <!-- Jastipper Fields -->
+                        <div id="jastipperFields" style="display:none;">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Nama Lengkap</label>
+                                <input type="text" class="form-control" id="name" name="name" placeholder="John Doe">
+                            </div>
+                        </div>
+
+                        <!-- Common Fields -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="email@example.com" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Register</button>
+                    </form>
+                    
+                    <hr class="my-4">
+                    <p class="text-center mb-0">
+                        Sudah punya akun? <a href="{{ url_for('main.login') }}">Login di sini</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleFields() {
+    const isBuyer = document.getElementById('buyer').checked;
+    document.getElementById('buyerFields').style.display = isBuyer ? 'block' : 'none';
+    document.getElementById('jastipperFields').style.display = isBuyer ? 'none' : 'block';
+    
+    // Toggle required attributes
+    if (isBuyer) {
+        document.getElementById('username').setAttribute('required', 'required');
+        document.getElementById('address').setAttribute('required', 'required');
+        document.getElementById('name').removeAttribute('required');
+    } else {
+        document.getElementById('username').removeAttribute('required');
+        document.getElementById('address').removeAttribute('required');
+        document.getElementById('name').setAttribute('required', 'required');
+    }
+}
+</script>
+{% endblock %}
